@@ -1,0 +1,547 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Determinante & Inversa de Matriz — CEUB</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Syne:wght@400;600;800&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg:        #07080f;
+      --surface:   #0e1120;
+      --border:    #1e2340;
+      --accent1:   #6c63ff;
+      --accent2:   #00d4ff;
+      --accent3:   #b57bff;
+      --text:      #e8eaf6;
+      --muted:     #7b82a8;
+      --green:     #00ffb3;
+      --glow1:     rgba(108,99,255,0.35);
+      --glow2:     rgba(0,212,255,0.25);
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    html { scroll-behavior: smooth; }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Syne', sans-serif;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* ── GRID BACKGROUND ── */
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background-image:
+        linear-gradient(var(--border) 1px, transparent 1px),
+        linear-gradient(90deg, var(--border) 1px, transparent 1px);
+      background-size: 48px 48px;
+      opacity: 0.4;
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── GLOW ORBS ── */
+    .orb {
+      position: fixed;
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+      z-index: 0;
+    }
+    .orb-1 { width: 600px; height: 600px; background: var(--glow1); top: -200px; left: -150px; animation: drift1 18s ease-in-out infinite; }
+    .orb-2 { width: 500px; height: 500px; background: var(--glow2); bottom: -100px; right: -100px; animation: drift2 22s ease-in-out infinite; }
+
+    @keyframes drift1 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(80px,60px)} }
+    @keyframes drift2 { 0%,100%{transform:translate(0,0)} 50%{transform:translate(-60px,-80px)} }
+
+    /* ── LAYOUT ── */
+    .wrapper {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 0 24px 80px;
+    }
+
+    /* ── HEADER ── */
+    header {
+      padding: 64px 0 48px;
+      text-align: center;
+      animation: fadeUp .8s ease both;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(108,99,255,0.15);
+      border: 1px solid rgba(108,99,255,0.4);
+      border-radius: 99px;
+      padding: 6px 16px;
+      font-size: .75rem;
+      letter-spacing: .12em;
+      text-transform: uppercase;
+      color: var(--accent3);
+      margin-bottom: 28px;
+    }
+    .badge-dot { width:8px; height:8px; border-radius:50%; background:var(--accent1); box-shadow:0 0 8px var(--accent1); animation: pulse 2s infinite; }
+    @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+
+    h1 {
+      font-size: clamp(2rem, 5vw, 3.4rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -.02em;
+    }
+    h1 span.grad {
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      margin-top: 16px;
+      color: var(--muted);
+      font-size: 1rem;
+      letter-spacing: .02em;
+    }
+
+    .header-meta {
+      margin-top: 28px;
+      display: flex;
+      justify-content: center;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .meta-chip {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 6px 14px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+    .meta-chip strong { color: var(--text); }
+
+    /* ── SECTION ── */
+    section {
+      margin-top: 56px;
+      animation: fadeUp .8s ease both;
+    }
+    section:nth-child(2) { animation-delay: .1s }
+    section:nth-child(3) { animation-delay: .2s }
+    section:nth-child(4) { animation-delay: .3s }
+    section:nth-child(5) { animation-delay: .4s }
+
+    .section-label {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: .7rem;
+      letter-spacing: .18em;
+      text-transform: uppercase;
+      color: var(--accent2);
+      margin-bottom: 16px;
+    }
+    .section-label::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: linear-gradient(90deg, var(--border), transparent);
+    }
+
+    h2 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    p {
+      color: var(--muted);
+      line-height: 1.8;
+      font-size: .97rem;
+    }
+    p + p { margin-top: 10px; }
+
+    /* ── CARD ── */
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 28px 32px;
+      position: relative;
+      overflow: hidden;
+    }
+    .card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 2px;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+    }
+
+    /* ── MATRIX DISPLAY ── */
+    .matrix-wrap {
+      overflow-x: auto;
+      margin-top: 8px;
+    }
+    .matrix-table {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .85rem;
+      border-collapse: separate;
+      border-spacing: 0;
+      margin: 0 auto;
+    }
+    .matrix-table td {
+      padding: 7px 18px;
+      text-align: right;
+      color: var(--text);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid transparent;
+      border-radius: 4px;
+      transition: background .15s, border-color .15s;
+    }
+    .matrix-table tr:hover td { background: rgba(108,99,255,0.1); border-color: rgba(108,99,255,0.3); }
+
+    /* bracket lines */
+    .m-bracket {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .m-bracket-line {
+      width: 6px;
+      height: 100%;
+      min-height: 110px;
+      border: 2px solid var(--accent1);
+    }
+    .m-bracket-line.left  { border-right: none; border-radius: 4px 0 0 4px; }
+    .m-bracket-line.right { border-left:  none; border-radius: 0 4px 4px 0; }
+
+    /* ── FORMULA ── */
+    .formula-box {
+      background: rgba(108,99,255,0.07);
+      border: 1px solid rgba(108,99,255,0.25);
+      border-radius: 12px;
+      padding: 20px 24px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .9rem;
+      line-height: 2;
+      color: var(--text);
+    }
+    .formula-box .kw { color: var(--accent3); }
+    .formula-box .val { color: var(--accent2); }
+    .formula-box .comment { color: var(--muted); }
+
+    /* ── RESULT HIGHLIGHT ── */
+    .result-big {
+      text-align: center;
+      padding: 32px;
+    }
+    .result-label {
+      font-size: .75rem;
+      letter-spacing: .15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 12px;
+    }
+    .result-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 2.8rem;
+      font-weight: 700;
+      background: linear-gradient(90deg, var(--accent1), var(--accent2));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .result-sub {
+      margin-top: 8px;
+      font-size: .8rem;
+      color: var(--muted);
+    }
+
+    /* ── PARAMS GRID ── */
+    .params-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+      gap: 12px;
+      margin-top: 20px;
+    }
+    .param-chip {
+      background: rgba(0,212,255,0.06);
+      border: 1px solid rgba(0,212,255,0.2);
+      border-radius: 10px;
+      padding: 14px 16px;
+    }
+    .param-name {
+      font-size: .7rem;
+      letter-spacing: .1em;
+      text-transform: uppercase;
+      color: var(--accent2);
+    }
+    .param-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 1.1rem;
+      color: var(--text);
+      margin-top: 4px;
+    }
+
+    /* ── STEPS ── */
+    .steps { display: flex; flex-direction: column; gap: 16px; margin-top: 8px; }
+    .step {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    .step-num {
+      flex-shrink: 0;
+      width: 32px; height: 32px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--accent1), var(--accent3));
+      display: grid;
+      place-items: center;
+      font-size: .8rem;
+      font-weight: 700;
+      color: #fff;
+    }
+    .step-text { padding-top: 6px; }
+    .step-text strong { color: var(--text); font-size: .95rem; }
+    .step-text p { margin-top: 2px; font-size: .85rem; }
+
+    /* ── VERIFY ── */
+    .verify-row {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      flex-wrap: wrap;
+      padding: 20px 0;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: .9rem;
+      color: var(--muted);
+    }
+    .verify-arrow { font-size: 1.4rem; color: var(--accent1); }
+    .verify-result {
+      background: rgba(0,255,179,0.1);
+      border: 1px solid rgba(0,255,179,0.35);
+      border-radius: 8px;
+      padding: 8px 20px;
+      color: var(--green);
+      font-weight: 700;
+      letter-spacing: .05em;
+    }
+
+    /* ── FOOTER ── */
+    footer {
+      margin-top: 80px;
+      padding-top: 28px;
+      border-top: 1px solid var(--border);
+      text-align: center;
+      color: var(--muted);
+      font-size: .8rem;
+    }
+    footer a { color: var(--accent2); text-decoration: none; }
+    footer a:hover { text-decoration: underline; }
+
+    /* ── ANIM ── */
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+  </style>
+</head>
+<body>
+
+<div class="orb orb-1"></div>
+<div class="orb orb-2"></div>
+
+<div class="wrapper">
+
+  <!-- HEADER -->
+  <header>
+    <div class="badge">
+      <span class="badge-dot"></span>
+      CEUB · Álgebra Linear &amp; Geometria Analítica
+    </div>
+    <h1>
+      <span class="grad">Determinante</span> &amp; Inversa<br>de uma Matriz em Python
+    </h1>
+    <p class="subtitle">Implementação numérica sobre a métrica de Schwarzschild</p>
+    <div class="header-meta">
+      <span class="meta-chip">Aluno: <strong>Lucas Cerqueira Lima</strong></span>
+      <span class="meta-chip">Prof. <strong>Ednardo P. Spaniol</strong></span>
+      <span class="meta-chip">Linguagem: <strong>Python 3</strong></span>
+      <span class="meta-chip">Biblioteca: <strong>NumPy</strong></span>
+      <span class="meta-chip">Matriz: <strong>4 × 4</strong></span>
+    </div>
+  </header>
+
+  <!-- INTRODUÇÃO -->
+  <section>
+    <div class="section-label">01 — Introdução</div>
+    <div class="card">
+      <h2>Sobre o Projeto</h2>
+      <p>
+        Este trabalho implementa, em Python, o cálculo do <strong style="color:var(--text)">determinante</strong> e da
+        <strong style="color:var(--text)">matriz inversa</strong> de uma matriz quadrada 4×4.
+        A matriz utilizada é inspirada na métrica de Schwarzschild da Relatividade Geral,
+        parametrizada pelas coordenadas esféricas <em>r</em>, <em>θ</em> e <em>φ</em>, além do parâmetro de massa <em>m</em>.
+      </p>
+      <p>
+        O código está organizado em funções independentes — uma para cada responsabilidade —
+        seguindo boas práticas de programação, com comentários explicativos em cada etapa.
+      </p>
+    </div>
+  </section>
+
+  <!-- MATRIZ -->
+  <section>
+    <div class="section-label">02 — A Matriz</div>
+    <div class="card">
+      <h2>Definição Analítica</h2>
+      <p style="margin-bottom:24px;">
+        A matriz <em>A</em> é definida de acordo com a equação (1) do enunciado, com
+        γ₀₀ = r / √(1 − 2m/r) e γ₁₁ = 1 / √(1 − 2m/r).
+      </p>
+      <div class="formula-box">
+        <span class="kw">γ₀₀</span> = r / √(1 − 2m/r) &nbsp;<span class="comment">← componente temporal</span><br>
+        <span class="kw">γ₁₁</span> = 1 / √(1 − 2m/r) &nbsp;<span class="comment">← componente radial</span><br><br>
+        <span class="comment">Linha 0: </span>[<span class="val">γ₀₀</span>,  0,  0,  0]<br>
+        <span class="comment">Linha 1: </span>[0, <span class="val">γ₁₁·sinθ·cosφ</span>,  r·cosθ·cosφ, −r·sinθ·sinφ]<br>
+        <span class="comment">Linha 2: </span>[0, <span class="val">γ₁₁·sinθ·sinφ</span>,  r·cosθ·sinφ,  r·sinθ·cosφ]<br>
+        <span class="comment">Linha 3: </span>[0, <span class="val">γ₁₁·cosθ</span>,       −r·sinθ,        0]
+      </div>
+    </div>
+  </section>
+
+  <!-- PARÂMETROS -->
+  <section>
+    <div class="section-label">03 — Parâmetros e Resultados</div>
+    <div class="card">
+      <h2>Valores de Entrada</h2>
+      <div class="params-grid">
+        <div class="param-chip"><div class="param-name">r (raio)</div><div class="param-value">10.0</div></div>
+        <div class="param-chip"><div class="param-name">m (massa)</div><div class="param-value">1.0</div></div>
+        <div class="param-chip"><div class="param-name">θ (theta)</div><div class="param-value">π / 4 → 45°</div></div>
+        <div class="param-chip"><div class="param-name">φ (phi)</div><div class="param-value">π / 3 → 60°</div></div>
+      </div>
+    </div>
+  </section>
+
+  <!-- MATRIZ A -->
+  <section>
+    <div class="section-label">04 — Matriz A (saída do programa)</div>
+    <div class="card">
+      <h2>Matriz A — Valores Numéricos</h2>
+      <div class="matrix-wrap" style="margin-top:20px;">
+        <div class="m-bracket">
+          <div class="m-bracket-line left"></div>
+          <table class="matrix-table">
+            <tr><td>11.180340</td><td>0.000000</td><td>0.000000</td><td>0.000000</td></tr>
+            <tr><td>0.000000</td><td>0.395285</td><td>3.535534</td><td>−6.123724</td></tr>
+            <tr><td>0.000000</td><td>0.684653</td><td>6.123724</td><td>3.535534</td></tr>
+            <tr><td>0.000000</td><td>0.790569</td><td>−7.071068</td><td>0.000000</td></tr>
+          </table>
+          <div class="m-bracket-line right"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- DETERMINANTE -->
+  <section>
+    <div class="section-label">05 — Determinante</div>
+    <div class="card">
+      <div class="result-big">
+        <div class="result-label">det ( A )</div>
+        <div class="result-value">883.883476</div>
+        <div class="result-sub">Determinante ≠ 0 → matriz invertível</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- INVERSA -->
+  <section>
+    <div class="section-label">06 — Matriz Inversa</div>
+    <div class="card">
+      <h2>Matriz A⁻¹</h2>
+      <div class="matrix-wrap" style="margin-top:20px;">
+        <div class="m-bracket">
+          <div class="m-bracket-line left"></div>
+          <table class="matrix-table">
+            <tr><td>0.089443</td><td>0.000000</td><td>0.000000</td><td>0.000000</td></tr>
+            <tr><td>0.000000</td><td>0.316228</td><td>0.547723</td><td>0.632456</td></tr>
+            <tr><td>0.000000</td><td>0.035355</td><td>0.061237</td><td>−0.070711</td></tr>
+            <tr><td>0.000000</td><td>−0.122474</td><td>0.070711</td><td>0.000000</td></tr>
+          </table>
+          <div class="m-bracket-line right"></div>
+        </div>
+      </div>
+
+      <!-- Verificação -->
+      <div class="verify-row" style="margin-top:28px;">
+        <span>A × A⁻¹</span>
+        <span class="verify-arrow">→</span>
+        <span class="verify-result">✓ Matriz Identidade (4×4)</span>
+      </div>
+      <p style="text-align:center;font-size:.8rem;margin-top:8px;">
+        Produto verificado — erros numéricos abaixo de 10⁻¹⁵
+      </p>
+    </div>
+  </section>
+
+  <!-- COMO RODAR -->
+  <section>
+    <div class="section-label">07 — Como Executar</div>
+    <div class="card">
+      <h2>Instruções</h2>
+      <div class="steps">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-text">
+            <strong>Clone o repositório</strong>
+            <p>Faça o download ou clone via <code style="color:var(--accent2)">git clone</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-text">
+            <strong>Instale a dependência</strong>
+            <p><code style="color:var(--accent2)">pip install numpy</code></p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-text">
+            <strong>Abra o notebook</strong>
+            <p>Use o Jupyter Notebook, JupyterLab ou Google Colab para abrir o arquivo <code style="color:var(--accent2)">.ipynb</code>.</p>
+          </div>
+        </div>
+        <div class="step">
+          <div class="step-num">4</div>
+          <div class="step-text">
+            <strong>Execute as células</strong>
+            <p>Ajuste os parâmetros <code style="color:var(--accent2)">r</code>, <code style="color:var(--accent2)">m</code>, <code style="color:var(--accent2)">theta</code> e <code style="color:var(--accent2)">phi</code> na última célula e rode tudo.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer>
+    <p>Centro Universitário de Brasília — CEUB · Álgebra Linear &amp; Geometria Analítica</p>
+    <p style="margin-top:6px;">Lucas Cerqueira Lima &nbsp;·&nbsp; Prof. Ednardo P. Spaniol &nbsp;·&nbsp; Brasília – DF &nbsp;·&nbsp; 2026</p>
+  </footer>
+
+</div>
+</body>
+</html>
